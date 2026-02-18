@@ -13,13 +13,7 @@ namespace JobTracker.Models
         public string CompanyName { get; set; }
 
         [Required]
-        public string JobTitle { get; set; }
-
-        [Required]
         public string JobType { get; set; }
-
-        [Required]
-        public string Status { get; set; }
 
         [DataType(DataType.Date)]
         public DateTime ApplicationDate { get; set; }
@@ -30,5 +24,17 @@ namespace JobTracker.Models
 
         [Required]
         public string UserId { get; set; }
+
+        public string Position { get; set; }
+         public DateTime AppliedDate { get; set; }
+
+
+        [Required]
+        public ApplicationStatus Status { get; set; } = ApplicationStatus.Applied;
+
     }
+    
 }
+
+
+

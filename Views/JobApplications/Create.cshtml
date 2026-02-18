@@ -1,0 +1,30 @@
+@model JobTracker.Models.JobApplication
+
+<h2>Add Job Application</h2>
+
+<form asp-action="Create" method="post">
+    <div>
+        <label>Company Name</label>
+        <input asp-for="CompanyName" />
+    </div>
+
+    <div>
+        <label>Position</label>
+        <input asp-for="Position" />
+    </div>
+
+<div>
+    <label>Status</label>
+    <select asp-for="Status"
+            asp-items="Html.GetEnumSelectList<JobTracker.Models.ApplicationStatus>()">
+    </select>
+</div>
+
+
+    <div>
+        <label>Applied Date</label>
+        <input asp-for="AppliedDate" type="date" />
+    </div>
+
+    <button type="submit">Save</button>
+</form>
