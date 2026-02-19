@@ -1,9 +1,11 @@
 @model JobTracker.Models.JobApplication
 
-<h2 class="mb-4">Add Job Application</h2>
+<h2 class="mb-4">Edit Job Application</h2>
 
-<form asp-action="Create" method="post" class="needs-validation">
+<form asp-action="Edit" method="post" class="needs-validation">
     @Html.AntiForgeryToken()
+    @* Hidden field for the JobApplication ID *@
+    <input type="hidden" asp-for="JobApplicationId" />
 
     <div class="mb-3">
         <label asp-for="CompanyName" class="form-label"></label>

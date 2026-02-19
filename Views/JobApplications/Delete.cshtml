@@ -1,0 +1,17 @@
+@model JobTracker.Models.JobApplication
+
+<h2>Delete Job Application</h2>
+<p>Are you sure you want to delete this job?</p>
+
+<div>
+    <strong>Company:</strong> @Model.CompanyName <br />
+    <strong>Position:</strong> @Model.Position <br />
+    <strong>Status:</strong> @Model.Status
+</div>
+
+<form asp-action="Delete" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="JobApplicationId" />
+    <button type="submit" class="btn btn-danger">Delete</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</form>
