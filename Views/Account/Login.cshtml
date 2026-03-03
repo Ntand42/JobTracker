@@ -1,0 +1,25 @@
+<h2>Login</h2>
+
+<form method="post">
+    @Html.AntiForgeryToken()
+
+    <div asp-validation-summary="All" class="text-danger"></div>
+    
+    <div class="mb-3">
+        <label>Email</label>
+        <input name="email" class="form-control" required />
+    </div>
+
+    <div class="mb-3">
+        <label>Password</label>
+        <input name="password" type="password" class="form-control" required />
+    </div>
+
+    <button type="submit" class="btn btn-success">Login</button>
+</form>
+
+<a asp-action="Register">Create an account</a>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

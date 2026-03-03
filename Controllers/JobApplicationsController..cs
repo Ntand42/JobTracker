@@ -3,18 +3,20 @@ using JobTracker.Data;
 using JobTracker.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authorization;
 
 
 
 namespace JobTracker.Controllers
 {
+    [Authorize]
     public class JobApplicationsController : Controller
     {
         private readonly ApplicationDbContext _context;
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
 
 
-       public JobApplicationsController(ApplicationDbContext context, UserManager<IdentityUser> userManager)
+       public JobApplicationsController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
 {
     _context = context;
     _userManager = userManager;
@@ -22,11 +24,18 @@ namespace JobTracker.Controllers
 
 
         // GET: JobApplications
-        public IActionResult Index()
-        {
-            var jobs = _context.JobApplications.ToList();
-            return View(jobs);
-        }
+ public async Task<IActionResult> Index()
+{
+    var userId = _userManager.GetUserId(User);
+
+    var jobs = await _context.JobApplications
+        .Where(j => j.UserId == userId)
+        .OrderByDescending(j => j.AppliedDate)
+        .ToListAsync();
+
+    return View(jobs);
+}
+
 
         // GET: JobApplications/Create
         public IActionResult Create()
@@ -49,8 +58,11 @@ public async Task<IActionResult> Create(JobApplication jobApplication)
         if (jobApplication.AppliedDate == default)
             jobApplication.AppliedDate = DateTime.Today;
 
-        _context.Add(jobApplication);
-        await _context.SaveChangesAsync();
+       jobApplication.UserId = _userManager.GetUserId(User);
+
+_context.Add(jobApplication);
+await _context.SaveChangesAsync();
+
         return RedirectToAction(nameof(Index));
     }
 
@@ -92,14 +104,18 @@ public async Task<IActionResult> Edit(int id, JobApplication jobApplication)
     if (!ModelState.IsValid)
         return View(jobApplication);
 
-    // Retrieve existing job from the database
+    var userId = _userManager.GetUserId(User);
+
+    // Retrieve existing job AND ensure it belongs to the logged-in user
     var existingJob = await _context.JobApplications
-        .FirstOrDefaultAsync(j => j.JobApplicationId == id);
+        .FirstOrDefaultAsync(j =>
+            j.JobApplicationId == id &&
+            j.UserId == userId);
 
     if (existingJob == null)
         return NotFound();
 
-    // Update only the editable fields
+    // Update only editable fields
     existingJob.CompanyName = jobApplication.CompanyName;
     existingJob.Position = jobApplication.Position;
     existingJob.JobType = jobApplication.JobType;
@@ -116,12 +132,13 @@ public async Task<IActionResult> Edit(int id, JobApplication jobApplication)
     {
         if (!JobApplicationExists(jobApplication.JobApplicationId))
             return NotFound();
-        else
-            throw;
+
+        throw;
     }
 
     return RedirectToAction(nameof(Index));
 }
+
 
 
 // GET: JobApplications/Delete/5

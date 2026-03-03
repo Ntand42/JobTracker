@@ -29,6 +29,19 @@
                     <partial name="_LoginPartial" />
                 </div>
             </div>
+            @if (User.Identity?.IsAuthenticated ?? false)
+{
+    <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+        @Html.AntiForgeryToken()
+        <button type="submit" class="btn btn-link">Logout</button>
+    </form>
+}
+else
+{
+    <a asp-controller="Account" asp-action="Login">Login</a>
+    <a asp-controller="Account" asp-action="Register">Register</a>
+}
+
         </nav>
     </header>
     <div class="container">
