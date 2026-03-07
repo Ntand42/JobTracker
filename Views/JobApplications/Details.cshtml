@@ -7,5 +7,20 @@
 <p><strong>Status:</strong> @Model.Status</p>
 <p><strong>Applied Date:</strong> @Model.AppliedDate.ToShortDateString()</p>
 
+@if (Model.InterviewDate.HasValue)
+{
+    <p><strong>Interview Date:</strong> @Model.InterviewDate.Value.ToShortDateString()</p>
+}
+
+@if (Model.FollowUpDate.HasValue)
+{
+    <p><strong>Follow-up Date:</strong> @Model.FollowUpDate.Value.ToShortDateString()</p>
+}
+
+@if (Model.OutcomeDate.HasValue)
+{
+    <p><strong>Outcome Date:</strong> @Model.OutcomeDate.Value.ToShortDateString()</p>
+}
+
 <a asp-action="Edit" asp-route-id="@Model.JobApplicationId">Edit</a> |
 <a asp-action="Index">Back</a>

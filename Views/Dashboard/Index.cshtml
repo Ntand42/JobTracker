@@ -50,6 +50,117 @@
         </div>
     </div>
 
+    <!-- Tracking & Schedule -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card h-100 border-warning">
+                <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">📅 Upcoming Interviews</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.UpcomingInterviews.Any())
+                    {
+                        <div class="list-group list-group-flush">
+                            @foreach (var item in Model.UpcomingInterviews)
+                            {
+                                <a asp-controller="JobApplications" asp-action="Edit" asp-route-id="@item.JobApplicationId" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="fw-bold">@item.CompanyName</div>
+                                        <small>@item.Position</small>
+                                    </div>
+                                    <span class="badge bg-dark rounded-pill">
+                                        @(item.InterviewDate?.ToString("MMM dd") ?? "TBD")
+                                    </span>
+                                </a>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted text-center my-3">No upcoming interviews scheduled.</p>
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card h-100 border-info">
+                <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">🔔 Follow-up Reminders</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.PendingFollowUps.Any())
+                    {
+                        <div class="list-group list-group-flush">
+                            @foreach (var item in Model.PendingFollowUps)
+                            {
+                                <a asp-controller="JobApplications" asp-action="Edit" asp-route-id="@item.JobApplicationId" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="fw-bold">@item.CompanyName</div>
+                                        <small>@item.Position</small>
+                                    </div>
+                                    <span class="badge bg-secondary rounded-pill">
+                                        @item.FollowUpDate?.ToString("MMM dd")
+                                    </span>
+                                </a>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted text-center my-3">No pending follow-ups.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Analytics & Performance -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">📈 Performance Metrics</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-4 mb-3">
+                            <h6 class="text-muted">Success Rate</h6>
+                            <div class="display-6 text-success">@Model.SuccessRate%</div>
+                            <small class="text-muted">Applications to Offers</small>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <h6 class="text-muted">Response Rate</h6>
+                            <div class="display-6 text-primary">@Model.ResponseRate%</div>
+                            <small class="text-muted">Any Response Received</small>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <h6 class="text-muted">Avg Response Time</h6>
+                            <div class="display-6 text-info">@Model.AverageResponseTimeDays</div>
+                            <small class="text-muted">Days</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">📊 Applications per Month</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.ApplicationsPerMonth.Any())
+                    {
+                        <canvas id="applicationsChart" width="400" height="200"></canvas>
+                    }
+                    else
+                    {
+                        <p class="text-muted text-center my-3">No application data available yet.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Recent Applications -->
     <div class="row">
         <div class="col-12">
@@ -114,4 +225,48 @@
             _ => "bg-secondary"
         };
     }
+}
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var ctx = document.getElementById('applicationsChart');
+            if (ctx) {
+                var chartData = @Html.Raw(Json.Serialize(Model.ApplicationsPerMonth));
+                var labels = Object.keys(chartData);
+                var data = Object.values(chartData);
+
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: '# of Applications',
+                            data: data,
+                            backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    stepSize: 1
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    </script>
 }

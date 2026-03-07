@@ -1,7 +1,5 @@
 using System;
 using System.ComponentModel.DataAnnotations;
-using System;
-using System.ComponentModel.DataAnnotations;
 
 namespace JobTracker.Models
 {
@@ -20,6 +18,15 @@ namespace JobTracker.Models
         [DataType(DataType.Date)]
         public DateTime AppliedDate { get; set; } = DateTime.Today;
 
+        [DataType(DataType.Date)]
+        public DateTime? InterviewDate { get; set; }
+
+        [DataType(DataType.Date)]
+        public DateTime? FollowUpDate { get; set; }
+
+        [DataType(DataType.Date)]
+        public DateTime? OutcomeDate { get; set; }
+
         public string? Notes { get; set; }
 
         public string? JobLink { get; set; }
@@ -29,9 +36,4 @@ namespace JobTracker.Models
         [Required]
         public ApplicationStatus Status { get; set; } = ApplicationStatus.Applied;
     }
-
-    
 }
-
-
-

@@ -41,8 +41,23 @@
     </div>
 
     <div class="mb-4">
-        <label asp-for="AppliedDate" class="form-label"></label>
+        <label asp-for="AppliedDate" class="form-label">Applied Date</label>
         <input asp-for="AppliedDate" class="form-control" type="date" />
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <label asp-for="InterviewDate" class="form-label">Interview Date</label>
+            <input asp-for="InterviewDate" class="form-control" type="date" />
+        </div>
+        <div class="col-md-4">
+            <label asp-for="FollowUpDate" class="form-label">Follow-up Date</label>
+            <input asp-for="FollowUpDate" class="form-control" type="date" />
+        </div>
+        <div class="col-md-4">
+            <label asp-for="OutcomeDate" class="form-label">Outcome Date</label>
+            <input asp-for="OutcomeDate" class="form-control" type="date" />
+        </div>
     </div>
 
     <button type="submit" class="btn btn-success">Save Job Application</button>

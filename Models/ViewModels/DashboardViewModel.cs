@@ -11,5 +11,13 @@ namespace JobTracker.Models.ViewModels
         public int OfferCount { get; set; }
         public int RejectedCount { get; set; }
         public List<JobApplication> RecentApplications { get; set; } = new List<JobApplication>();
+        public List<JobApplication> UpcomingInterviews { get; set; } = new List<JobApplication>();
+        public List<JobApplication> PendingFollowUps { get; set; } = new List<JobApplication>();
+
+        // Analytics
+        public Dictionary<string, int> ApplicationsPerMonth { get; set; } = new Dictionary<string, int>();
+        public double SuccessRate { get; set; }
+        public double ResponseRate { get; set; }
+        public double AverageResponseTimeDays { get; set; }
     }
 }
