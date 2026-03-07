@@ -1,10 +1,36 @@
 @model IEnumerable<JobTracker.Models.JobApplication>
+@using JobTracker.Models
+
+@{
+    ViewData["Title"] = "My Job Applications";
+}
 
 <h2>My Job Applications</h2>
 
-<p>
-    <a asp-action="Create" class="btn btn-primary">Add New Job</a>
-</p>
+<div class="row mb-3">
+    <div class="col-md-6">
+        <a asp-action="Create" class="btn btn-primary">Add New Job</a>
+    </div>
+    <div class="col-md-6">
+        <form method="get" class="d-flex justify-content-end">
+            <select name="status" class="form-select w-auto" onchange="this.form.submit()">
+                <option value="">-- Filter by Status --</option>
+                @foreach (var status in Enum.GetValues(typeof(ApplicationStatus)))
+                {
+                    var isSelected = ViewData["CurrentStatus"]?.ToString() == status.ToString();
+                    if (isSelected)
+                    {
+                        <option value="@status" selected>@status</option>
+                    }
+                    else
+                    {
+                        <option value="@status">@status</option>
+                    }
+                }
+            </select>
+        </form>
+    </div>
+</div>
 
 <table class="table table-striped">
     <thead>

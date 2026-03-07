@@ -1,0 +1,117 @@
+@model JobTracker.Models.ViewModels.DashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="container-fluid">
+    <h2 class="mb-4">Dashboard</h2>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-white bg-primary mb-3">
+                <div class="card-header">Total Applications</div>
+                <div class="card-body">
+                    <h5 class="card-title display-4">@Model.TotalApplications</h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-info mb-3">
+                <div class="card-header">Applied</div>
+                <div class="card-body">
+                    <h5 class="card-title display-4">@Model.AppliedCount</h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-warning mb-3">
+                <div class="card-header">Interview</div>
+                <div class="card-body">
+                    <h5 class="card-title display-4">@Model.InterviewCount</h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-success mb-3">
+                <div class="card-header">Offers</div>
+                <div class="card-body">
+                    <h5 class="card-title display-4">@Model.OfferCount</h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-danger mb-3">
+                <div class="card-header">Rejected</div>
+                <div class="card-body">
+                    <h5 class="card-title display-4">@Model.RejectedCount</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Applications -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Recent Applications (Last 5)</h4>
+                    <a asp-controller="JobApplications" asp-action="Index" class="btn btn-outline-primary btn-sm">View All</a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Company</th>
+                                    <th>Position</th>
+                                    <th>Status</th>
+                                    <th>Date Applied</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var job in Model.RecentApplications)
+                                {
+                                    <tr>
+                                        <td>@job.CompanyName</td>
+                                        <td>@job.Position</td>
+                                        <td>
+                                            <span class="badge @GetStatusBadgeClass(job.Status)">
+                                                @job.Status
+                                            </span>
+                                        </td>
+                                        <td>@job.AppliedDate.ToShortDateString()</td>
+                                        <td>
+                                            <a asp-controller="JobApplications" asp-action="Details" asp-route-id="@job.JobApplicationId" class="btn btn-sm btn-info">Details</a>
+                                        </td>
+                                    </tr>
+                                }
+                                @if (!Model.RecentApplications.Any())
+                                {
+                                    <tr>
+                                        <td colspan="5" class="text-center py-4">No applications found. <a asp-controller="JobApplications" asp-action="Create">Add your first job application!</a></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@functions {
+    public string GetStatusBadgeClass(JobTracker.Models.ApplicationStatus status)
+    {
+        return status switch
+        {
+            JobTracker.Models.ApplicationStatus.Applied => "bg-primary",
+            JobTracker.Models.ApplicationStatus.Interview => "bg-warning text-dark",
+            JobTracker.Models.ApplicationStatus.Offer => "bg-success",
+            JobTracker.Models.ApplicationStatus.Rejected => "bg-danger",
+            _ => "bg-secondary"
+        };
+    }
+}

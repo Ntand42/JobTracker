@@ -24,17 +24,26 @@ namespace JobTracker.Controllers
 
 
         // GET: JobApplications
- public async Task<IActionResult> Index()
-{
-    var userId = _userManager.GetUserId(User);
+        public async Task<IActionResult> Index(ApplicationStatus? status)
+        {
+            var userId = _userManager.GetUserId(User);
 
-    var jobs = await _context.JobApplications
-        .Where(j => j.UserId == userId)
-        .OrderByDescending(j => j.AppliedDate)
-        .ToListAsync();
+            var jobsQuery = _context.JobApplications
+                .Where(j => j.UserId == userId);
 
-    return View(jobs);
-}
+            if (status.HasValue)
+            {
+                jobsQuery = jobsQuery.Where(j => j.Status == status.Value);
+            }
+
+            var jobs = await jobsQuery
+                .OrderByDescending(j => j.AppliedDate)
+                .ToListAsync();
+
+            ViewData["CurrentStatus"] = status;
+
+            return View(jobs);
+        }
 
 
         // GET: JobApplications/Create
