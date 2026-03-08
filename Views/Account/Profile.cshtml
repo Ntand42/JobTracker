@@ -1,0 +1,45 @@
+@using Microsoft.AspNetCore.Identity
+@using JobTracker.Models
+@inject UserManager<ApplicationUser> UserManager
+@model ApplicationUser
+
+@{
+    ViewData["Title"] = "Profile";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">My Profile</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-sm-3 fw-bold">First Name:</div>
+                        <div class="col-sm-9">@Model.FirstName</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-3 fw-bold">Last Name:</div>
+                        <div class="col-sm-9">@Model.LastName</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-3 fw-bold">Email:</div>
+                        <div class="col-sm-9">@Model.Email</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-3 fw-bold">Phone Number:</div>
+                        <div class="col-sm-9">@Model.PhoneNumber</div>
+                    </div>
+                    
+                    <hr />
+                    
+                    <div class="d-flex justify-content-end">
+                        <a asp-controller="Dashboard" asp-action="Index" class="btn btn-secondary me-2">Back to Dashboard</a>
+                        <!-- Add Edit Profile button if needed later -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
