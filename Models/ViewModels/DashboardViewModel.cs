@@ -5,6 +5,7 @@ namespace JobTracker.Models.ViewModels
 {
     public class DashboardViewModel
     {
+        public string UserName { get; set; } = string.Empty;
         public int TotalApplications { get; set; }
         public int AppliedCount { get; set; }
         public int InterviewCount { get; set; }

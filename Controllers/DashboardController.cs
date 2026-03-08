@@ -22,7 +22,8 @@ namespace JobTracker.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var userId = _userManager.GetUserId(User);
+            var user = await _userManager.GetUserAsync(User);
+            var userId = user?.Id;
 
             var allApplications = await _context.JobApplications
                 .Where(j => j.UserId == userId)
@@ -31,6 +32,7 @@ namespace JobTracker.Controllers
 
             var viewModel = new DashboardViewModel
             {
+                UserName = user?.FirstName ?? user?.UserName ?? "User",
                 TotalApplications = allApplications.Count,
                 AppliedCount = allApplications.Count(j => j.Status == ApplicationStatus.Applied),
                 InterviewCount = allApplications.Count(j => j.Status == ApplicationStatus.Interview),

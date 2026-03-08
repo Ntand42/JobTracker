@@ -79,7 +79,7 @@ namespace JobTracker.Controllers
                 email, password, false, false);
 
             if (result.Succeeded)
-                return RedirectToAction("Index", "JobApplications");
+                return RedirectToAction("Index", "Dashboard");
 
             ModelState.AddModelError("", "Invalid login attempt");
             return View();
