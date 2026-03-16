@@ -30,6 +30,12 @@
                             <li class="nav-item">
                                 <a class="nav-link text-dark" asp-controller="JobApplications" asp-action="Create">Add Job</a>
                             </li>
+                            @if (User.IsInRole("SuperUser"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-controller="SuperUser" asp-action="Index">Users</a>
+                                </li>
+                            }
                         }
                     </ul>
                     <ul class="navbar-nav">

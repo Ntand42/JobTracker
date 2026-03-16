@@ -22,6 +22,21 @@ namespace JobTracker.Controllers
     _userManager = userManager;
 }
 
+        private async Task LogActivityAsync(string action, string subjectUserId, string? details = null)
+        {
+            _context.UserActivities.Add(new UserActivity
+            {
+                ActorUserId = subjectUserId,
+                SubjectUserId = subjectUserId,
+                Action = action,
+                Details = details,
+                IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+                UserAgent = Request.Headers.UserAgent.ToString()
+            });
+
+            await _context.SaveChangesAsync();
+        }
+
 
         // GET: JobApplications
         public async Task<IActionResult> Index(ApplicationStatus? status)
@@ -71,6 +86,12 @@ public async Task<IActionResult> Create(JobApplication jobApplication)
 
 _context.Add(jobApplication);
 await _context.SaveChangesAsync();
+
+        var userId = _userManager.GetUserId(User);
+        if (!string.IsNullOrWhiteSpace(userId))
+        {
+            await LogActivityAsync("JobCreated", userId, $"{jobApplication.CompanyName} - {jobApplication.Position}");
+        }
 
         return RedirectToAction(nameof(Index));
     }
@@ -145,6 +166,11 @@ public async Task<IActionResult> Edit(int id, JobApplication jobApplication)
         throw;
     }
 
+    if (!string.IsNullOrWhiteSpace(userId))
+    {
+        await LogActivityAsync("JobUpdated", userId, $"{existingJob.CompanyName} - {existingJob.Position} (#{existingJob.JobApplicationId})");
+    }
+
     return RedirectToAction(nameof(Index));
 }
 
@@ -172,6 +198,20 @@ public async Task<IActionResult> Delete(int id)
 
     if (job != null)
     {
+        var userId = _userManager.GetUserId(User);
+        if (!string.IsNullOrWhiteSpace(userId))
+        {
+            _context.UserActivities.Add(new UserActivity
+            {
+                ActorUserId = userId,
+                SubjectUserId = userId,
+                Action = "JobDeleted",
+                Details = $"{job.CompanyName} - {job.Position} (#{job.JobApplicationId})",
+                IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+                UserAgent = Request.Headers.UserAgent.ToString()
+            });
+        }
+
         _context.JobApplications.Remove(job);
         await _context.SaveChangesAsync();
     }

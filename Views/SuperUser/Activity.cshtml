@@ -1,0 +1,47 @@
+@model JobTracker.Models.ViewModels.SuperUserActivityViewModel
+
+@{
+    ViewData["Title"] = "User Activity";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2 class="mb-0">Activity</h2>
+            <div class="text-muted">@Model.SubjectEmail @if (!string.IsNullOrWhiteSpace(Model.SubjectName)) { <span>· @Model.SubjectName</span> }</div>
+        </div>
+        <a asp-controller="SuperUser" asp-action="Index" class="btn btn-outline-secondary">Back</a>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-striped align-middle">
+            <thead>
+                <tr>
+                    <th>Time (UTC)</th>
+                    <th>Action</th>
+                    <th>Details</th>
+                    <th>Actor</th>
+                    <th>IP</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var row in Model.Activities)
+            {
+                <tr>
+                    <td>@row.CreatedAtUtc.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                    <td>@row.Action</td>
+                    <td>@row.Details</td>
+                    <td>@(row.ActorEmail ?? "-")</td>
+                    <td>@(row.IpAddress ?? "-")</td>
+                </tr>
+            }
+            @if (Model.Activities.Count == 0)
+            {
+                <tr>
+                    <td colspan="5" class="text-center py-4">No activity yet.</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>

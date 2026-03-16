@@ -16,5 +16,6 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     }
 
     public DbSet<JobApplication> JobApplications { get; set; }
+    public DbSet<UserActivity> UserActivities { get; set; }
 
 }

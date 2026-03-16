@@ -6,24 +6,45 @@ using Microsoft.AspNetCore.WebUtilities;
 using System.Text.Encodings.Web;
 using System.Text;
 using System.Diagnostics;
+using JobTracker.Data;
 using JobTracker.Models;
 
 namespace JobTracker.Controllers
 {
     public class AccountController : Controller
     {
+        private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IEmailSender _emailSender;
 
         public AccountController(
+            ApplicationDbContext context,
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
             IEmailSender emailSender)
         {
+            _context = context;
             _userManager = userManager;
             _signInManager = signInManager;
             _emailSender = emailSender;
+        }
+
+        private async Task LogActivityAsync(string action, string subjectUserId, string? details = null)
+        {
+            var actorUserId = _userManager.GetUserId(User);
+
+            _context.UserActivities.Add(new UserActivity
+            {
+                ActorUserId = string.IsNullOrWhiteSpace(actorUserId) ? null : actorUserId,
+                SubjectUserId = subjectUserId,
+                Action = action,
+                Details = details,
+                IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+                UserAgent = Request.Headers.UserAgent.ToString()
+            });
+
+            await _context.SaveChangesAsync();
         }
 
         // REGISTER (GET)
@@ -77,6 +98,8 @@ namespace JobTracker.Controllers
                 await _emailSender.SendEmailAsync(email, "Confirm your email",
                     $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
 
+                await LogActivityAsync("Register", user.Id, email);
+
                 return RedirectToAction("RegisterConfirmation");
             }
 
@@ -121,6 +144,8 @@ namespace JobTracker.Controllers
                 return View("Error", new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
             }
 
+            await LogActivityAsync("EmailConfirmed", user.Id, user.Email ?? user.UserName);
+
             return View();
         }
 
@@ -135,15 +160,21 @@ namespace JobTracker.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(string email, string password)
         {
+            var user = await _userManager.FindByEmailAsync(email);
             var result = await _signInManager.PasswordSignInAsync(
                 email, password, false, false);
 
             if (result.Succeeded)
+            {
+                if (user != null)
+                {
+                    await LogActivityAsync("LoginSuccess", user.Id, email);
+                }
                 return RedirectToAction("Index", "Dashboard");
+            }
 
             if (result.IsNotAllowed)
             {
-                var user = await _userManager.FindByEmailAsync(email);
                 if (user != null && await _userManager.CheckPasswordAsync(user, password))
                 {
                     if (!await _userManager.IsEmailConfirmedAsync(user))
@@ -163,10 +194,17 @@ namespace JobTracker.Controllers
                         await _emailSender.SendEmailAsync(email, "Confirm your email",
                             $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
 
+                        await LogActivityAsync("LoginBlockedUnconfirmed", user.Id, email);
+
                         ModelState.AddModelError(string.Empty, "Your email is not confirmed. A new verification link has been sent to your email.");
                         return View();
                     }
                 }
+            }
+
+            if (user != null)
+            {
+                await LogActivityAsync("LoginFailed", user.Id, email);
             }
 
             ModelState.AddModelError("", "Invalid login attempt");
@@ -178,7 +216,12 @@ namespace JobTracker.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout()
         {
+            var userId = _userManager.GetUserId(User);
             await _signInManager.SignOutAsync();
+            if (!string.IsNullOrWhiteSpace(userId))
+            {
+                await LogActivityAsync("Logout", userId);
+            }
             return RedirectToAction("Login");
         }
 
