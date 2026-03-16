@@ -1,0 +1,96 @@
+@model JobTracker.Models.ViewModels.SuperUserLogsViewModel
+
+@{
+    ViewData["Title"] = "Logs";
+    var totalPages = Model.PageSize > 0 ? (int)Math.Ceiling((double)Model.TotalCount / Model.PageSize) : 0;
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">Logs</h2>
+        <a asp-controller="SuperUser" asp-action="Index" class="btn btn-outline-secondary">Back</a>
+    </div>
+
+    <form method="get" class="row g-2 mb-3">
+        <div class="col-md-3">
+            <input name="actionFilter" value="@Model.ActionFilter" class="form-control" placeholder="Action (optional)" />
+        </div>
+        <div class="col-md-7">
+            <input name="q" value="@Model.Q" class="form-control" placeholder="Search details, emails, or IP" />
+        </div>
+        <div class="col-md-2 d-grid">
+            <button type="submit" class="btn btn-primary">Filter</button>
+        </div>
+    </form>
+
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <div class="text-muted">Total: @Model.TotalCount</div>
+        <div class="text-muted">Page @Model.Page @if (totalPages > 0) { <span>of @totalPages</span> }</div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-striped align-middle">
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Action</th>
+                    <th>Subject</th>
+                    <th>Actor</th>
+                    <th>IP</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var row in Model.Logs)
+            {
+                <tr>
+                    <td>@row.CreatedAtUtc.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                    <td>@row.Action</td>
+                    <td>
+                        <div>@(row.SubjectEmail ?? row.SubjectUserId)</div>
+                        <div class="small">
+                            <a asp-controller="SuperUser" asp-action="Activity" asp-route-id="@row.SubjectUserId">View user activity</a>
+                        </div>
+                    </td>
+                    <td>@(row.ActorEmail ?? "-")</td>
+                    <td>@(row.IpAddress ?? "-")</td>
+                    <td>@row.Details</td>
+                </tr>
+            }
+            @if (Model.Logs.Count == 0)
+            {
+                <tr>
+                    <td colspan="6" class="text-center py-4">No logs found.</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mt-3">
+        <div>
+            @if (Model.Page > 1)
+            {
+                <a class="btn btn-outline-primary"
+                   asp-controller="SuperUser"
+                   asp-action="Logs"
+                   asp-route-page="@(Model.Page - 1)"
+                   asp-route-pageSize="@Model.PageSize"
+                   asp-route-actionFilter="@Model.ActionFilter"
+                   asp-route-q="@Model.Q">Previous</a>
+            }
+        </div>
+        <div>
+            @if (Model.Page < totalPages)
+            {
+                <a class="btn btn-outline-primary"
+                   asp-controller="SuperUser"
+                   asp-action="Logs"
+                   asp-route-page="@(Model.Page + 1)"
+                   asp-route-pageSize="@Model.PageSize"
+                   asp-route-actionFilter="@Model.ActionFilter"
+                   asp-route-q="@Model.Q">Next</a>
+            }
+        </div>
+    </div>
+</div>

@@ -316,6 +316,71 @@ namespace JobTracker.Controllers
             return RedirectToAction(nameof(Notifications));
         }
 
+        public async Task<IActionResult> Logs(string? actionFilter, string? q, int page = 1, int pageSize = 50)
+        {
+            if (page < 1) page = 1;
+            if (pageSize < 10) pageSize = 10;
+            if (pageSize > 200) pageSize = 200;
+
+            var baseQuery =
+                from a in _context.UserActivities.AsNoTracking()
+                join subject in _userManager.Users.AsNoTracking() on a.SubjectUserId equals subject.Id into subjects
+                from subject in subjects.DefaultIfEmpty()
+                join actor in _userManager.Users.AsNoTracking() on a.ActorUserId equals actor.Id into actors
+                from actor in actors.DefaultIfEmpty()
+                select new
+                {
+                    Activity = a,
+                    SubjectEmail = subject != null ? (subject.Email ?? subject.UserName) : null,
+                    ActorEmail = actor != null ? (actor.Email ?? actor.UserName) : null
+                };
+
+            if (!string.IsNullOrWhiteSpace(actionFilter))
+            {
+                var act = actionFilter.Trim();
+                baseQuery = baseQuery.Where(x => x.Activity.Action == act);
+            }
+
+            if (!string.IsNullOrWhiteSpace(q))
+            {
+                var term = q.Trim();
+                baseQuery = baseQuery.Where(x =>
+                    (x.Activity.Details ?? "").Contains(term) ||
+                    (x.SubjectEmail ?? "").Contains(term) ||
+                    (x.ActorEmail ?? "").Contains(term) ||
+                    (x.Activity.IpAddress ?? "").Contains(term));
+            }
+
+            var totalCount = await baseQuery.CountAsync();
+
+            var logs = await baseQuery
+                .OrderByDescending(x => x.Activity.CreatedAtUtc)
+                .ThenByDescending(x => x.Activity.UserActivityId)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(x => new SuperUserLogRowViewModel
+                {
+                    CreatedAtUtc = x.Activity.CreatedAtUtc,
+                    Action = x.Activity.Action,
+                    Details = x.Activity.Details,
+                    SubjectUserId = x.Activity.SubjectUserId,
+                    SubjectEmail = x.SubjectEmail,
+                    ActorEmail = x.ActorEmail,
+                    IpAddress = x.Activity.IpAddress
+                })
+                .ToListAsync();
+
+            return View(new SuperUserLogsViewModel
+            {
+                Logs = logs,
+                TotalCount = totalCount,
+                Page = page,
+                PageSize = pageSize,
+                ActionFilter = actionFilter,
+                Q = q
+            });
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Disable(string id)

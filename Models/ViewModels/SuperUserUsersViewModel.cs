@@ -81,4 +81,25 @@ namespace JobTracker.Models.ViewModels
         public DateTime? EndsAtUtc { get; set; }
         public IReadOnlyList<SuperUserNotificationRowViewModel> Notifications { get; set; } = Array.Empty<SuperUserNotificationRowViewModel>();
     }
+
+    public class SuperUserLogRowViewModel
+    {
+        public DateTime CreatedAtUtc { get; set; }
+        public string Action { get; set; } = string.Empty;
+        public string? Details { get; set; }
+        public string SubjectUserId { get; set; } = string.Empty;
+        public string? SubjectEmail { get; set; }
+        public string? ActorEmail { get; set; }
+        public string? IpAddress { get; set; }
+    }
+
+    public class SuperUserLogsViewModel
+    {
+        public IReadOnlyList<SuperUserLogRowViewModel> Logs { get; set; } = Array.Empty<SuperUserLogRowViewModel>();
+        public int TotalCount { get; set; }
+        public int Page { get; set; }
+        public int PageSize { get; set; }
+        public string? ActionFilter { get; set; }
+        public string? Q { get; set; }
+    }
 }
