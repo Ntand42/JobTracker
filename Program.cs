@@ -25,6 +25,7 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
 {
     options.SignIn.RequireConfirmedAccount = true;
 })
+.AddRoles<IdentityRole>()
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
 
@@ -40,6 +41,51 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+
+    const string superUserRoleName = "SuperUser";
+    if (!await roleManager.RoleExistsAsync(superUserRoleName))
+    {
+        await roleManager.CreateAsync(new IdentityRole(superUserRoleName));
+    }
+
+    var superUserEmail = builder.Configuration["SuperUser:Email"];
+    var superUserPassword = builder.Configuration["SuperUser:Password"];
+
+    if (!string.IsNullOrWhiteSpace(superUserEmail))
+    {
+        var user = await userManager.FindByEmailAsync(superUserEmail);
+
+        if (user == null && !string.IsNullOrWhiteSpace(superUserPassword))
+        {
+            user = new ApplicationUser
+            {
+                UserName = superUserEmail,
+                Email = superUserEmail,
+                FirstName = "Super",
+                LastName = "User",
+                EmailConfirmed = true
+            };
+
+            var createResult = await userManager.CreateAsync(user, superUserPassword);
+            if (!createResult.Succeeded)
+            {
+                var errors = string.Join(" | ", createResult.Errors.Select(e => e.Description));
+                Console.WriteLine($"[SuperUser Seed] Failed to create superuser: {errors}");
+                user = null;
+            }
+        }
+
+        if (user != null && !await userManager.IsInRoleAsync(user, superUserRoleName))
+        {
+            await userManager.AddToRoleAsync(user, superUserRoleName);
+        }
+    }
+}
 
 // Pipeline
 if (app.Environment.IsDevelopment())
