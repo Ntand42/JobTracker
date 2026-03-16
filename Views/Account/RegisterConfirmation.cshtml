@@ -1,0 +1,28 @@
+@{
+    ViewData["Title"] = "Register confirmation";
+}
+
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white text-center">
+                <h3>Registration Confirmation</h3>
+            </div>
+            <div class="card-body text-center">
+                <p>
+                    Please check your email to confirm your account.
+                </p>
+                @if (TempData["EmailConfirmationLink"] is string link && !string.IsNullOrWhiteSpace(link))
+                {
+                    <div class="alert alert-warning" role="alert">
+                        <div>Verification email may not arrive if SMTP is blocked.</div>
+                        <div>
+                            <a class="btn btn-sm btn-primary mt-2" href="@link">Verify Email Now</a>
+                        </div>
+                    </div>
+                }
+                <a asp-action="Login" class="btn btn-outline-secondary">Back to Login</a>
+            </div>
+        </div>
+    </div>
+</div>

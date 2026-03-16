@@ -13,6 +13,16 @@
                     <form method="post">
                         @Html.AntiForgeryToken()
                         
+                        @if (ViewData["EmailConfirmationLink"] is string link && !string.IsNullOrWhiteSpace(link))
+                        {
+                            <div class="alert alert-warning" role="alert">
+                                <div>Your email is not confirmed.</div>
+                                <div>
+                                    <a class="btn btn-sm btn-primary mt-2" href="@link">Verify Email Now</a>
+                                </div>
+                            </div>
+                        }
+
                         <div asp-validation-summary="All" class="text-danger mb-3"></div>
                         
                         <div class="form-floating mb-3">

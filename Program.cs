@@ -4,7 +4,11 @@ using JobTracker.Data;
 
 using JobTracker.Models;
 
+using Microsoft.AspNetCore.Identity.UI.Services;
+using JobTracker.Services;
+
 var builder = WebApplication.CreateBuilder(args);
+
 
 // Connection string
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
@@ -19,9 +23,18 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 // ✅ Identity (REGISTERED ONCE)
 builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
 {
-    options.SignIn.RequireConfirmedAccount = false;
+    options.SignIn.RequireConfirmedAccount = true;
 })
-.AddEntityFrameworkStores<ApplicationDbContext>();
+.AddEntityFrameworkStores<ApplicationDbContext>()
+.AddDefaultTokenProviders();
+
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.LoginPath = "/Account/Login";
+    options.AccessDeniedPath = "/Account/Login";
+});
+
+builder.Services.AddTransient<IEmailSender, EmailSender>();
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();

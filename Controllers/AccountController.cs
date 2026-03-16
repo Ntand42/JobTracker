@@ -1,6 +1,11 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity.UI.Services;
+using Microsoft.AspNetCore.WebUtilities;
+using System.Text.Encodings.Web;
+using System.Text;
+using System.Diagnostics;
 using JobTracker.Models;
 
 namespace JobTracker.Controllers
@@ -9,13 +14,16 @@ namespace JobTracker.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly IEmailSender _emailSender;
 
         public AccountController(
             UserManager<ApplicationUser> userManager,
-            SignInManager<ApplicationUser> signInManager)
+            SignInManager<ApplicationUser> signInManager,
+            IEmailSender emailSender)
         {
             _userManager = userManager;
             _signInManager = signInManager;
+            _emailSender = emailSender;
         }
 
         // REGISTER (GET)
@@ -53,13 +61,64 @@ namespace JobTracker.Controllers
             if (result.Succeeded)
             {
                 Console.WriteLine("User created successfully!");
-                return RedirectToAction("Login");
+                
+                var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                var code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
+                var callbackUrl = Url.Action("ConfirmEmail", "Account", new { userId = user.Id, code = code }, protocol: HttpContext.Request.Scheme);
+
+                if (string.IsNullOrWhiteSpace(callbackUrl))
+                {
+                    return View("Error", new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+                }
+
+                TempData["EmailConfirmationLink"] = callbackUrl;
+                TempData["EmailConfirmationAddress"] = email;
+
+                await _emailSender.SendEmailAsync(email, "Confirm your email",
+                    $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+
+                return RedirectToAction("RegisterConfirmation");
             }
 
             foreach (var error in result.Errors)
             {
                 Console.WriteLine($"Error: {error.Description}");
                 ModelState.AddModelError("", error.Description);
+            }
+
+            return View();
+        }
+
+        // REGISTER CONFIRMATION (GET)
+        public IActionResult RegisterConfirmation()
+        {
+            return View();
+        }
+
+        // CONFIRM EMAIL (GET)
+        public async Task<IActionResult> ConfirmEmail(string userId, string? code, string? token)
+        {
+            if (string.IsNullOrWhiteSpace(userId) || (string.IsNullOrWhiteSpace(code) && string.IsNullOrWhiteSpace(token)))
+            {
+                return RedirectToAction("Index", "Dashboard");
+            }
+
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return NotFound($"Unable to load user with ID '{userId}'.");
+            }
+
+            var decodedToken = token;
+            if (string.IsNullOrWhiteSpace(decodedToken) && !string.IsNullOrWhiteSpace(code))
+            {
+                decodedToken = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(code));
+            }
+
+            var result = await _userManager.ConfirmEmailAsync(user, decodedToken!);
+            if (!result.Succeeded)
+            {
+                return View("Error", new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
             }
 
             return View();
@@ -81,6 +140,34 @@ namespace JobTracker.Controllers
 
             if (result.Succeeded)
                 return RedirectToAction("Index", "Dashboard");
+
+            if (result.IsNotAllowed)
+            {
+                var user = await _userManager.FindByEmailAsync(email);
+                if (user != null && await _userManager.CheckPasswordAsync(user, password))
+                {
+                    if (!await _userManager.IsEmailConfirmedAsync(user))
+                    {
+                        var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                        var code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
+                        var callbackUrl = Url.Action("ConfirmEmail", "Account", new { userId = user.Id, code = code }, protocol: HttpContext.Request.Scheme);
+
+                        if (string.IsNullOrWhiteSpace(callbackUrl))
+                        {
+                            return View("Error", new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+                        }
+
+                        ViewData["EmailConfirmationLink"] = callbackUrl;
+                        ViewData["EmailConfirmationAddress"] = email;
+
+                        await _emailSender.SendEmailAsync(email, "Confirm your email",
+                            $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+
+                        ModelState.AddModelError(string.Empty, "Your email is not confirmed. A new verification link has been sent to your email.");
+                        return View();
+                    }
+                }
+            }
 
             ModelState.AddModelError("", "Invalid login attempt");
             return View();
@@ -132,10 +219,16 @@ namespace JobTracker.Controllers
             }
 
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-            var callbackUrl = Url.Action("ResetPassword", "Account", new { token, email = user.Email }, protocol: HttpContext.Request.Scheme);
+            var code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
+            var callbackUrl = Url.Action("ResetPassword", "Account", new { code, email = user.Email }, protocol: HttpContext.Request.Scheme);
 
-            // In a real app, send this link via email
-            Console.WriteLine($"RESET PASSWORD LINK: {callbackUrl}");
+            if (string.IsNullOrWhiteSpace(callbackUrl))
+            {
+                return View("Error", new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+            }
+
+            await _emailSender.SendEmailAsync(email, "Reset Password",
+                $"Please reset your password by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
 
             return RedirectToAction("ForgotPasswordConfirmation");
         }
@@ -146,13 +239,14 @@ namespace JobTracker.Controllers
         }
 
         // RESET PASSWORD (GET)
-        public IActionResult ResetPassword(string token, string email)
+        public IActionResult ResetPassword(string? code, string? token, string email)
         {
-            if (token == null || email == null)
+            var value = token ?? code;
+            if (string.IsNullOrWhiteSpace(value) || string.IsNullOrWhiteSpace(email))
             {
                 ModelState.AddModelError("", "Invalid password reset token");
             }
-            ViewData["Token"] = token;
+            ViewData["Token"] = value;
             ViewData["Email"] = email;
             return View();
         }
@@ -177,7 +271,16 @@ namespace JobTracker.Controllers
                 return RedirectToAction("ResetPasswordConfirmation");
             }
 
-            var result = await _userManager.ResetPasswordAsync(user, token, password);
+            var decodedToken = token;
+            try
+            {
+                decodedToken = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(token));
+            }
+            catch
+            {
+            }
+
+            var result = await _userManager.ResetPasswordAsync(user, decodedToken, password);
             if (result.Succeeded)
             {
                 return RedirectToAction("ResetPasswordConfirmation");
