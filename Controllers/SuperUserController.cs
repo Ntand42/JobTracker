@@ -22,6 +22,56 @@ namespace JobTracker.Controllers
 
         public async Task<IActionResult> Index()
         {
+            var today = DateTime.Today;
+            var monthStart = new DateTime(today.Year, today.Month, 1);
+            var nextMonthStart = monthStart.AddMonths(1);
+
+            var totalUsers = await _userManager.Users.CountAsync();
+            var totalApplications = await _context.JobApplications.CountAsync();
+            var totalInterviews = await _context.JobApplications.CountAsync(j => j.Status == ApplicationStatus.Interview);
+            var totalOffers = await _context.JobApplications.CountAsync(j => j.Status == ApplicationStatus.Offer);
+            var applicationsThisMonth = await _context.JobApplications.CountAsync(j => j.AppliedDate >= monthStart && j.AppliedDate < nextMonthStart);
+
+            var averageApplicationsPerUser = totalUsers > 0
+                ? Math.Round((double)totalApplications / totalUsers, 2)
+                : 0;
+
+            var mostActive = await _context.JobApplications
+                .Where(j => !string.IsNullOrWhiteSpace(j.UserId))
+                .GroupBy(j => j.UserId!)
+                .Select(g => new { UserId = g.Key, TotalApplications = g.Count() })
+                .OrderByDescending(x => x.TotalApplications)
+                .Take(5)
+                .ToListAsync();
+
+            var mostActiveUserIds = mostActive.Select(x => x.UserId).ToList();
+            var mostActiveUsers = mostActiveUserIds.Count == 0
+                ? new List<ApplicationUser>()
+                : await _userManager.Users.Where(u => mostActiveUserIds.Contains(u.Id)).ToListAsync();
+
+            var mostActiveLookup = mostActiveUsers.ToDictionary(u => u.Id, u => u);
+            var mostActiveRows = mostActive.Select(x =>
+            {
+                if (!mostActiveLookup.TryGetValue(x.UserId, out var user))
+                {
+                    return new SuperUserMostActiveUserViewModel
+                    {
+                        UserId = x.UserId,
+                        Email = x.UserId,
+                        Name = string.Empty,
+                        TotalApplications = x.TotalApplications
+                    };
+                }
+
+                return new SuperUserMostActiveUserViewModel
+                {
+                    UserId = user.Id,
+                    Email = user.Email ?? user.UserName ?? string.Empty,
+                    Name = $"{user.FirstName} {user.LastName}".Trim(),
+                    TotalApplications = x.TotalApplications
+                };
+            }).ToList();
+
             var users = await _userManager.Users.OrderBy(u => u.Email).ToListAsync();
             var rows = new List<SuperUserUserRowViewModel>(users.Count);
 
@@ -43,7 +93,21 @@ namespace JobTracker.Controllers
                 });
             }
 
-            return View(new SuperUserUsersViewModel { Users = rows });
+            return View(new SuperUserUsersViewModel
+            {
+                Users = rows,
+                Stats = new SuperUserPlatformStatsViewModel
+                {
+                    TotalUsers = totalUsers,
+                    TotalApplications = totalApplications,
+                    TotalInterviews = totalInterviews,
+                    TotalOffers = totalOffers,
+                    ApplicationsThisMonth = applicationsThisMonth,
+                    AverageApplicationsPerUser = averageApplicationsPerUser,
+                    CurrentMonthLabel = monthStart.ToString("MMMM yyyy")
+                },
+                MostActiveUsers = mostActiveRows
+            });
         }
 
         public async Task<IActionResult> Activity(string id)
@@ -92,6 +156,164 @@ namespace JobTracker.Controllers
                 SubjectName = $"{subjectUser.FirstName} {subjectUser.LastName}".Trim(),
                 Activities = rows
             });
+        }
+
+        public async Task<IActionResult> Applications(ApplicationStatus? status, string? q, int page = 1, int pageSize = 50)
+        {
+            if (page < 1) page = 1;
+            if (pageSize < 10) pageSize = 10;
+            if (pageSize > 200) pageSize = 200;
+
+            var baseQuery =
+                from j in _context.JobApplications.AsNoTracking()
+                join u in _userManager.Users.AsNoTracking() on j.UserId equals u.Id into ju
+                from u in ju.DefaultIfEmpty()
+                select new
+                {
+                    Job = j,
+                    UserId = j.UserId,
+                    UserEmail = u != null ? (u.Email ?? u.UserName) : null,
+                    UserName = u != null ? (u.FirstName + " " + u.LastName) : null
+                };
+
+            if (status.HasValue)
+            {
+                baseQuery = baseQuery.Where(x => x.Job.Status == status.Value);
+            }
+
+            if (!string.IsNullOrWhiteSpace(q))
+            {
+                var term = q.Trim();
+                baseQuery = baseQuery.Where(x =>
+                    x.Job.CompanyName.Contains(term) ||
+                    x.Job.Position.Contains(term) ||
+                    ((x.UserEmail ?? "")).Contains(term));
+            }
+
+            var totalCount = await baseQuery.CountAsync();
+
+            var items = await baseQuery
+                .OrderByDescending(x => x.Job.AppliedDate)
+                .ThenByDescending(x => x.Job.JobApplicationId)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(x => new SuperUserApplicationRowViewModel
+                {
+                    JobApplicationId = x.Job.JobApplicationId,
+                    CompanyName = x.Job.CompanyName,
+                    Position = x.Job.Position,
+                    Status = x.Job.Status,
+                    AppliedDate = x.Job.AppliedDate,
+                    UserId = x.UserId,
+                    UserEmail = x.UserEmail ?? x.UserId ?? string.Empty,
+                    UserName = (x.UserName ?? string.Empty).Trim()
+                })
+                .ToListAsync();
+
+            return View(new SuperUserApplicationsViewModel
+            {
+                Applications = items,
+                TotalCount = totalCount,
+                Page = page,
+                PageSize = pageSize,
+                Status = status,
+                Q = q
+            });
+        }
+
+        public async Task<IActionResult> Notifications()
+        {
+            var rows = await _context.GlobalNotifications
+                .AsNoTracking()
+                .OrderByDescending(n => n.CreatedAtUtc)
+                .Take(100)
+                .Select(n => new SuperUserNotificationRowViewModel
+                {
+                    GlobalNotificationId = n.GlobalNotificationId,
+                    Message = n.Message,
+                    CreatedAtUtc = n.CreatedAtUtc,
+                    StartsAtUtc = n.StartsAtUtc,
+                    EndsAtUtc = n.EndsAtUtc,
+                    IsActive = n.IsActive
+                })
+                .ToListAsync();
+
+            return View(new SuperUserNotificationsViewModel
+            {
+                StartsAtUtc = DateTime.Now,
+                Notifications = rows
+            });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Notifications(string message, DateTime? startsAtUtc, DateTime? endsAtUtc)
+        {
+            if (string.IsNullOrWhiteSpace(message))
+            {
+                return await Notifications();
+            }
+
+            var starts = startsAtUtc ?? DateTime.Now;
+            DateTime? ends = endsAtUtc;
+            if (ends.HasValue && ends.Value <= starts)
+            {
+                ends = null;
+            }
+
+            var actorUserId = _userManager.GetUserId(User);
+            var notification = new GlobalNotification
+            {
+                Message = message.Trim(),
+                CreatedByUserId = actorUserId,
+                CreatedAtUtc = DateTime.Now,
+                StartsAtUtc = starts,
+                EndsAtUtc = ends,
+                IsActive = true
+            };
+
+            _context.GlobalNotifications.Add(notification);
+            _context.UserActivities.Add(new UserActivity
+            {
+                ActorUserId = actorUserId,
+                SubjectUserId = actorUserId ?? string.Empty,
+                Action = "GlobalNotificationCreated",
+                Details = notification.Message,
+                IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+                UserAgent = Request.Headers.UserAgent.ToString()
+            });
+
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Notifications));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeactivateNotification(int id)
+        {
+            var notification = await _context.GlobalNotifications.FirstOrDefaultAsync(n => n.GlobalNotificationId == id);
+            if (notification == null)
+            {
+                return RedirectToAction(nameof(Notifications));
+            }
+
+            notification.IsActive = false;
+            notification.EndsAtUtc = DateTime.Now;
+
+            var actorUserId = _userManager.GetUserId(User);
+            _context.UserActivities.Add(new UserActivity
+            {
+                ActorUserId = actorUserId,
+                SubjectUserId = actorUserId ?? string.Empty,
+                Action = "GlobalNotificationDeactivated",
+                Details = notification.Message,
+                IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+                UserAgent = Request.Headers.UserAgent.ToString()
+            });
+
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Notifications));
         }
 
         [HttpPost]

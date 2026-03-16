@@ -1,0 +1,114 @@
+@using JobTracker.Models
+@model JobTracker.Models.ViewModels.SuperUserApplicationsViewModel
+
+@{
+    ViewData["Title"] = "All Applications";
+    var totalPages = Model.PageSize > 0 ? (int)Math.Ceiling((double)Model.TotalCount / Model.PageSize) : 0;
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">All Applications</h2>
+        <a asp-controller="SuperUser" asp-action="Index" class="btn btn-outline-secondary">Back</a>
+    </div>
+
+    <form method="get" class="row g-2 mb-3">
+        <div class="col-md-3">
+            <select name="status" class="form-select">
+                <option value="">All Statuses</option>
+                @foreach (var s in Enum.GetValues(typeof(ApplicationStatus)))
+                {
+                    var isSelected = Model.Status?.ToString() == s?.ToString();
+                    if (isSelected)
+                    {
+                        <option value="@s" selected>@s</option>
+                    }
+                    else
+                    {
+                        <option value="@s">@s</option>
+                    }
+                }
+            </select>
+        </div>
+        <div class="col-md-6">
+            <input name="q" value="@Model.Q" class="form-control" placeholder="Search company, position, or user email" />
+        </div>
+        <div class="col-md-3 d-grid">
+            <button type="submit" class="btn btn-primary">Filter</button>
+        </div>
+    </form>
+
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <div class="text-muted">
+            Total: @Model.TotalCount
+        </div>
+        <div class="text-muted">
+            Page @Model.Page @if (totalPages > 0) { <span>of @totalPages</span> }
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-striped align-middle">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Company</th>
+                    <th>Position</th>
+                    <th>Status</th>
+                    <th class="text-end">Applied</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var row in Model.Applications)
+            {
+                <tr>
+                    <td>
+                        <div>@row.UserEmail</div>
+                        @if (!string.IsNullOrWhiteSpace(row.UserName))
+                        {
+                            <div class="text-muted small">@row.UserName</div>
+                        }
+                    </td>
+                    <td>@row.CompanyName</td>
+                    <td>@row.Position</td>
+                    <td>@row.Status</td>
+                    <td class="text-end">@row.AppliedDate.ToShortDateString()</td>
+                </tr>
+            }
+            @if (Model.Applications.Count == 0)
+            {
+                <tr>
+                    <td colspan="5" class="text-center py-4">No applications found.</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mt-3">
+        <div>
+            @if (Model.Page > 1)
+            {
+                <a class="btn btn-outline-primary"
+                   asp-controller="SuperUser"
+                   asp-action="Applications"
+                   asp-route-page="@(Model.Page - 1)"
+                   asp-route-pageSize="@Model.PageSize"
+                   asp-route-status="@(Model.Status?.ToString())"
+                   asp-route-q="@Model.Q">Previous</a>
+            }
+        </div>
+        <div>
+            @if (Model.Page < totalPages)
+            {
+                <a class="btn btn-outline-primary"
+                   asp-controller="SuperUser"
+                   asp-action="Applications"
+                   asp-route-page="@(Model.Page + 1)"
+                   asp-route-pageSize="@Model.PageSize"
+                   asp-route-status="@(Model.Status?.ToString())"
+                   asp-route-q="@Model.Q">Next</a>
+            }
+        </div>
+    </div>
+</div>

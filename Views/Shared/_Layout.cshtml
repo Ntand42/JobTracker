@@ -1,5 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
+@using JobTracker.Data
+@using Microsoft.EntityFrameworkCore
+@inject ApplicationDbContext Db
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -35,6 +38,12 @@
                                 <li class="nav-item">
                                     <a class="nav-link text-dark" asp-controller="SuperUser" asp-action="Index">Users</a>
                                 </li>
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-controller="SuperUser" asp-action="Applications">All Applications</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-controller="SuperUser" asp-action="Notifications">Notifications</a>
+                                </li>
                             }
                         }
                     </ul>
@@ -66,6 +75,20 @@
         </nav>
     </header>
     <div class="container">
+        @{
+            var now = DateTime.Now;
+            var notification = await Db.GlobalNotifications
+                .AsNoTracking()
+                .Where(n => n.IsActive && n.StartsAtUtc <= now && (!n.EndsAtUtc.HasValue || n.EndsAtUtc.Value > now))
+                .OrderByDescending(n => n.CreatedAtUtc)
+                .FirstOrDefaultAsync();
+        }
+        @if (notification != null)
+        {
+            <div class="alert alert-info d-flex justify-content-between align-items-center" role="alert">
+                <div>@notification.Message</div>
+            </div>
+        }
         <main role="main" class="pb-3">
             @RenderBody()
         </main>

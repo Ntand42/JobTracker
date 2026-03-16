@@ -6,6 +6,99 @@
 
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">Platform Statistics</h2>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-white bg-primary mb-3">
+                <div class="card-header">Total Users</div>
+                <div class="card-body">
+                    <h5 class="card-title display-6">@Model.Stats.TotalUsers</h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-info mb-3">
+                <div class="card-header">Total Applications Logged</div>
+                <div class="card-body">
+                    <h5 class="card-title display-6">@Model.Stats.TotalApplications</h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-warning mb-3">
+                <div class="card-header">Total Interviews</div>
+                <div class="card-body">
+                    <h5 class="card-title display-6">@Model.Stats.TotalInterviews</h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-success mb-3">
+                <div class="card-header">Total Offers</div>
+                <div class="card-body">
+                    <h5 class="card-title display-6">@Model.Stats.TotalOffers</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card mb-3">
+                <div class="card-header">Applications This Month (@Model.Stats.CurrentMonthLabel)</div>
+                <div class="card-body">
+                    <h5 class="card-title display-6">@Model.Stats.ApplicationsThisMonth</h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card mb-3">
+                <div class="card-header">Average Applications Per User</div>
+                <div class="card-body">
+                    <h5 class="card-title display-6">@Model.Stats.AverageApplicationsPerUser</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">Most Active Users</h4>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>User</th>
+                            <th>Name</th>
+                            <th class="text-end">Total Applications</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var row in Model.MostActiveUsers)
+                    {
+                        <tr>
+                            <td>@row.Email</td>
+                            <td>@row.Name</td>
+                            <td class="text-end">@row.TotalApplications</td>
+                        </tr>
+                    }
+                    @if (Model.MostActiveUsers.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="3" class="text-center py-4">No data yet.</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
         <h2 class="mb-0">Users</h2>
     </div>
 
