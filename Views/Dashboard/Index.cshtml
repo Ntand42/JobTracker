@@ -90,15 +90,23 @@
                 <div class="card-body">
                     @if (Model.PendingFollowUps.Any())
                     {
+                        var today = DateTime.Today;
                         <div class="list-group list-group-flush">
                             @foreach (var item in Model.PendingFollowUps)
                             {
+                                var followUpDate = item.FollowUpDate?.Date;
+                                var badgeClass = followUpDate.HasValue && followUpDate.Value < today
+                                    ? "bg-danger"
+                                    : followUpDate.HasValue && followUpDate.Value == today
+                                        ? "bg-warning text-dark"
+                                        : "bg-secondary";
+
                                 <a asp-controller="JobApplications" asp-action="Edit" asp-route-id="@item.JobApplicationId" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
                                     <div>
                                         <div class="fw-bold">@item.CompanyName</div>
                                         <small>@item.Position</small>
                                     </div>
-                                    <span class="badge bg-secondary rounded-pill">
+                                    <span class="badge @badgeClass rounded-pill">
                                         @item.FollowUpDate?.ToString("MMM dd")
                                     </span>
                                 </a>

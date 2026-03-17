@@ -46,7 +46,10 @@ namespace JobTracker.Controllers
                     .Take(5)
                     .ToList(),
                 PendingFollowUps = allApplications
-                    .Where(j => j.FollowUpDate.HasValue && j.FollowUpDate.Value >= DateTime.Today)
+                    .Where(j =>
+                        j.FollowUpDate.HasValue &&
+                        j.Status != ApplicationStatus.Offer &&
+                        j.Status != ApplicationStatus.Rejected)
                     .OrderBy(j => j.FollowUpDate)
                     .Take(5)
                     .ToList(),
