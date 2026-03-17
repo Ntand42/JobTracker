@@ -1,0 +1,162 @@
+@using JobTracker.Models
+@model JobTracker.Models.ViewModels.SuperUserTrendsViewModel
+
+@{
+    ViewData["Title"] = "Job Market Trends";
+    var days = Model.Days;
+    var label = days.HasValue && days.Value > 0 ? $"Last {days.Value} days" : "All time";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">Job Market Trends</h2>
+        <a asp-controller="SuperUser" asp-action="Index" class="btn btn-outline-secondary">Back</a>
+    </div>
+
+    <form method="get" class="row g-2 mb-4">
+        <div class="col-md-3">
+            <select name="days" class="form-select">
+                <option value="" selected="@(days == null)">Default (90 days)</option>
+                <option value="30" selected="@(days == 30)">Last 30 days</option>
+                <option value="90" selected="@(days == 90)">Last 90 days</option>
+                <option value="180" selected="@(days == 180)">Last 180 days</option>
+                <option value="365" selected="@(days == 365)">Last 365 days</option>
+                <option value="0" selected="@(days == 0)">All time</option>
+            </select>
+        </div>
+        <div class="col-md-3 d-grid">
+            <button type="submit" class="btn btn-primary">Apply</button>
+        </div>
+        <div class="col-md-6 d-flex align-items-center text-muted">
+            <span>@label</span>
+        </div>
+    </form>
+
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card text-white bg-primary mb-3">
+                <div class="card-header">Total Applications</div>
+                <div class="card-body">
+                    <h5 class="card-title display-6">@Model.TotalApplications</h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-white bg-success mb-3">
+                <div class="card-header">Offers</div>
+                <div class="card-body">
+                    <h5 class="card-title display-6">@Model.OfferCount</h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-white bg-dark mb-3">
+                <div class="card-header">Application Success Rate</div>
+                <div class="card-body">
+                    <h5 class="card-title display-6">@Model.SuccessRate%</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header">Most Applied Companies</div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Company</th>
+                                    <th class="text-end">Applications</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.TopCompanies)
+                                {
+                                    <tr>
+                                        <td>@item.Name</td>
+                                        <td class="text-end">@item.Count</td>
+                                    </tr>
+                                }
+                                @if (!Model.TopCompanies.Any())
+                                {
+                                    <tr>
+                                        <td colspan="2" class="text-center py-4 text-muted">No data yet.</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header">Most Popular Job Titles</div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Title</th>
+                                    <th class="text-end">Applications</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.TopJobTitles)
+                                {
+                                    <tr>
+                                        <td>@item.Name</td>
+                                        <td class="text-end">@item.Count</td>
+                                    </tr>
+                                }
+                                @if (!Model.TopJobTitles.Any())
+                                {
+                                    <tr>
+                                        <td colspan="2" class="text-center py-4 text-muted">No data yet.</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">Status Breakdown</div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Status</th>
+                                    <th class="text-end">Count</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var row in Model.StatusBreakdown)
+                                {
+                                    <tr>
+                                        <td>@row.Status</td>
+                                        <td class="text-end">@row.Count</td>
+                                    </tr>
+                                }
+                                @if (!Model.StatusBreakdown.Any())
+                                {
+                                    <tr>
+                                        <td colspan="2" class="text-center py-4 text-muted">No data yet.</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

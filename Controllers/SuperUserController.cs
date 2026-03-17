@@ -221,6 +221,60 @@ namespace JobTracker.Controllers
             });
         }
 
+        public async Task<IActionResult> Trends(int? days = 90)
+        {
+            if (days.HasValue && days.Value > 3650)
+            {
+                days = 3650;
+            }
+
+            var baseQuery = _context.JobApplications.AsNoTracking();
+            if (days.HasValue && days.Value > 0)
+            {
+                var startDate = DateTime.Today.AddDays(-days.Value);
+                baseQuery = baseQuery.Where(j => j.AppliedDate >= startDate);
+            }
+
+            var totalApplications = await baseQuery.CountAsync();
+            var offerCount = await baseQuery.CountAsync(j => j.Status == ApplicationStatus.Offer);
+            var successRate = totalApplications > 0
+                ? Math.Round((double)offerCount / totalApplications * 100, 1)
+                : 0;
+
+            var topCompanies = await baseQuery
+                .GroupBy(j => j.CompanyName)
+                .Select(g => new SuperUserTrendItemViewModel { Name = g.Key, Count = g.Count() })
+                .OrderByDescending(x => x.Count)
+                .ThenBy(x => x.Name)
+                .Take(10)
+                .ToListAsync();
+
+            var topJobTitles = await baseQuery
+                .GroupBy(j => j.Position)
+                .Select(g => new SuperUserTrendItemViewModel { Name = g.Key, Count = g.Count() })
+                .OrderByDescending(x => x.Count)
+                .ThenBy(x => x.Name)
+                .Take(10)
+                .ToListAsync();
+
+            var statusBreakdown = await baseQuery
+                .GroupBy(j => j.Status)
+                .Select(g => new SuperUserStatusCountViewModel { Status = g.Key, Count = g.Count() })
+                .OrderByDescending(x => x.Count)
+                .ToListAsync();
+
+            return View(new SuperUserTrendsViewModel
+            {
+                Days = days,
+                TotalApplications = totalApplications,
+                OfferCount = offerCount,
+                SuccessRate = successRate,
+                TopCompanies = topCompanies,
+                TopJobTitles = topJobTitles,
+                StatusBreakdown = statusBreakdown
+            });
+        }
+
         public async Task<IActionResult> Notifications()
         {
             var rows = await _context.GlobalNotifications

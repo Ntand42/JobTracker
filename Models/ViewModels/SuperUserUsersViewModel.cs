@@ -102,4 +102,27 @@ namespace JobTracker.Models.ViewModels
         public string? ActionFilter { get; set; }
         public string? Q { get; set; }
     }
+
+    public class SuperUserTrendItemViewModel
+    {
+        public string Name { get; set; } = string.Empty;
+        public int Count { get; set; }
+    }
+
+    public class SuperUserStatusCountViewModel
+    {
+        public ApplicationStatus Status { get; set; }
+        public int Count { get; set; }
+    }
+
+    public class SuperUserTrendsViewModel
+    {
+        public int? Days { get; set; }
+        public int TotalApplications { get; set; }
+        public int OfferCount { get; set; }
+        public double SuccessRate { get; set; }
+        public IReadOnlyList<SuperUserTrendItemViewModel> TopCompanies { get; set; } = Array.Empty<SuperUserTrendItemViewModel>();
+        public IReadOnlyList<SuperUserTrendItemViewModel> TopJobTitles { get; set; } = Array.Empty<SuperUserTrendItemViewModel>();
+        public IReadOnlyList<SuperUserStatusCountViewModel> StatusBreakdown { get; set; } = Array.Empty<SuperUserStatusCountViewModel>();
+    }
 }
