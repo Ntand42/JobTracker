@@ -7,46 +7,72 @@
     <h2 class="mb-4">Welcome back, @Model.UserName!</h2>
 
     <!-- Summary Cards -->
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card text-white bg-primary mb-3">
-                <div class="card-header">Total Applications</div>
-                <div class="card-body">
-                    <h5 class="card-title display-4">@Model.TotalApplications</h5>
+    @{
+        var total = Model.TotalApplications;
+        var appliedPct = total > 0 ? Math.Round((double)Model.AppliedCount / total * 100, 0) : 0;
+        var interviewPct = total > 0 ? Math.Round((double)Model.InterviewCount / total * 100, 0) : 0;
+        var offerPct = total > 0 ? Math.Round((double)Model.OfferCount / total * 100, 0) : 0;
+        var rejectedPct = total > 0 ? Math.Round((double)Model.RejectedCount / total * 100, 0) : 0;
+    }
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md">
+            <a asp-controller="JobApplications" asp-action="Index" class="text-decoration-none">
+                <div class="card text-white bg-primary h-100 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="fw-semibold">Total</div>
+                                <div class="display-5 fw-bold mb-0">@Model.TotalApplications</div>
+                                <div class="opacity-75 small">View all applications</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
+            </a>
         </div>
-        <div class="col-md-3">
-            <div class="card text-white bg-info mb-3">
-                <div class="card-header">Applied</div>
-                <div class="card-body">
-                    <h5 class="card-title display-4">@Model.AppliedCount</h5>
+        <div class="col-6 col-md">
+            <a asp-controller="JobApplications" asp-action="Index" asp-route-status="Applied" class="text-decoration-none">
+                <div class="card text-white bg-info h-100 shadow-sm">
+                    <div class="card-body">
+                        <div class="fw-semibold">Applied</div>
+                        <div class="display-5 fw-bold mb-0">@Model.AppliedCount</div>
+                        <div class="opacity-75 small">@appliedPct% of total</div>
+                    </div>
                 </div>
-            </div>
+            </a>
         </div>
-        <div class="col-md-3">
-            <div class="card text-white bg-warning mb-3">
-                <div class="card-header">Interview</div>
-                <div class="card-body">
-                    <h5 class="card-title display-4">@Model.InterviewCount</h5>
+        <div class="col-6 col-md">
+            <a asp-controller="JobApplications" asp-action="Index" asp-route-status="Interview" class="text-decoration-none">
+                <div class="card text-dark bg-warning h-100 shadow-sm">
+                    <div class="card-body">
+                        <div class="fw-semibold">Interview</div>
+                        <div class="display-5 fw-bold mb-0">@Model.InterviewCount</div>
+                        <div class="opacity-75 small">@interviewPct% of total</div>
+                    </div>
                 </div>
-            </div>
+            </a>
         </div>
-        <div class="col-md-3">
-            <div class="card text-white bg-success mb-3">
-                <div class="card-header">Offers</div>
-                <div class="card-body">
-                    <h5 class="card-title display-4">@Model.OfferCount</h5>
+        <div class="col-6 col-md">
+            <a asp-controller="JobApplications" asp-action="Index" asp-route-status="Offer" class="text-decoration-none">
+                <div class="card text-white bg-success h-100 shadow-sm">
+                    <div class="card-body">
+                        <div class="fw-semibold">Offers</div>
+                        <div class="display-5 fw-bold mb-0">@Model.OfferCount</div>
+                        <div class="opacity-75 small">@offerPct% of total</div>
+                    </div>
                 </div>
-            </div>
+            </a>
         </div>
-        <div class="col-md-3">
-            <div class="card text-white bg-danger mb-3">
-                <div class="card-header">Rejected</div>
-                <div class="card-body">
-                    <h5 class="card-title display-4">@Model.RejectedCount</h5>
+        <div class="col-6 col-md">
+            <a asp-controller="JobApplications" asp-action="Index" asp-route-status="Rejected" class="text-decoration-none">
+                <div class="card text-white bg-danger h-100 shadow-sm">
+                    <div class="card-body">
+                        <div class="fw-semibold">Rejected</div>
+                        <div class="display-5 fw-bold mb-0">@Model.RejectedCount</div>
+                        <div class="opacity-75 small">@rejectedPct% of total</div>
+                    </div>
                 </div>
-            </div>
+            </a>
         </div>
     </div>
 

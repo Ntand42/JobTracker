@@ -9,55 +9,61 @@
         <h2 class="mb-0">Platform Statistics</h2>
     </div>
 
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card text-white bg-primary mb-3">
-                <div class="card-header">Total Users</div>
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card text-white bg-primary h-100 shadow-sm">
                 <div class="card-body">
-                    <h5 class="card-title display-6">@Model.Stats.TotalUsers</h5>
+                    <div class="fw-semibold">Total Users</div>
+                    <div class="display-5 fw-bold mb-0">@Model.Stats.TotalUsers</div>
+                    <div class="opacity-75 small">Registered accounts</div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card text-white bg-info mb-3">
-                <div class="card-header">Total Applications Logged</div>
+        <div class="col-6 col-md-3">
+            <div class="card text-white bg-info h-100 shadow-sm">
                 <div class="card-body">
-                    <h5 class="card-title display-6">@Model.Stats.TotalApplications</h5>
+                    <div class="fw-semibold">Total Applications</div>
+                    <div class="display-5 fw-bold mb-0">@Model.Stats.TotalApplications</div>
+                    <div class="opacity-75 small">All users combined</div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card text-white bg-warning mb-3">
-                <div class="card-header">Total Interviews</div>
+        <div class="col-6 col-md-3">
+            <div class="card text-dark bg-warning h-100 shadow-sm">
                 <div class="card-body">
-                    <h5 class="card-title display-6">@Model.Stats.TotalInterviews</h5>
+                    <div class="fw-semibold">Total Interviews</div>
+                    <div class="display-5 fw-bold mb-0">@Model.Stats.TotalInterviews</div>
+                    <div class="opacity-75 small">Status = Interview</div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card text-white bg-success mb-3">
-                <div class="card-header">Total Offers</div>
+        <div class="col-6 col-md-3">
+            <div class="card text-white bg-success h-100 shadow-sm">
                 <div class="card-body">
-                    <h5 class="card-title display-6">@Model.Stats.TotalOffers</h5>
+                    <div class="fw-semibold">Total Offers</div>
+                    <div class="display-5 fw-bold mb-0">@Model.Stats.TotalOffers</div>
+                    <div class="opacity-75 small">Status = Offer</div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="row mb-4">
-        <div class="col-md-6">
-            <div class="card mb-3">
-                <div class="card-header">Applications This Month (@Model.Stats.CurrentMonthLabel)</div>
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-md-6">
+            <div class="card h-100 shadow-sm">
                 <div class="card-body">
-                    <h5 class="card-title display-6">@Model.Stats.ApplicationsThisMonth</h5>
+                    <div class="fw-semibold">Applications This Month</div>
+                    <div class="display-6 fw-bold mb-0">@Model.Stats.ApplicationsThisMonth</div>
+                    <div class="text-muted small">@Model.Stats.CurrentMonthLabel</div>
                 </div>
             </div>
         </div>
-        <div class="col-md-6">
-            <div class="card mb-3">
-                <div class="card-header">Average Applications Per User</div>
+        <div class="col-12 col-md-6">
+            <div class="card h-100 shadow-sm">
                 <div class="card-body">
-                    <h5 class="card-title display-6">@Model.Stats.AverageApplicationsPerUser</h5>
+                    <div class="fw-semibold">Average Applications / User</div>
+                    <div class="display-6 fw-bold mb-0">@Model.Stats.AverageApplicationsPerUser</div>
+                    <div class="text-muted small">Total applications divided by users</div>
                 </div>
             </div>
         </div>
