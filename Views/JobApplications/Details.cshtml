@@ -1,26 +1,81 @@
 @model JobTracker.Models.JobApplication
 
-<h2>Job Details</h2>
-
-<p><strong>Company:</strong> @Model.CompanyName</p>
-<p><strong>Position:</strong> @Model.Position</p>
-<p><strong>Status:</strong> @Model.Status</p>
-<p><strong>Applied Date:</strong> @Model.AppliedDate.ToShortDateString()</p>
-
-@if (Model.InterviewDate.HasValue)
-{
-    <p><strong>Interview Date:</strong> @Model.InterviewDate.Value.ToShortDateString()</p>
+@{
+    ViewData["Title"] = "Job Details";
+    var statusClass = Model.Status switch
+    {
+        JobTracker.Models.ApplicationStatus.Applied => "bg-primary",
+        JobTracker.Models.ApplicationStatus.Interview => "bg-warning text-dark",
+        JobTracker.Models.ApplicationStatus.Offer => "bg-success",
+        JobTracker.Models.ApplicationStatus.Rejected => "bg-danger",
+        _ => "bg-secondary"
+    };
 }
 
-@if (Model.FollowUpDate.HasValue)
-{
-    <p><strong>Follow-up Date:</strong> @Model.FollowUpDate.Value.ToShortDateString()</p>
-}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2 class="mb-0">@Model.CompanyName</h2>
+            <div class="text-muted">@Model.Position</div>
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-action="Edit" asp-route-id="@Model.JobApplicationId" class="btn btn-primary">Edit</a>
+            <a asp-action="Index" class="btn btn-outline-secondary">Back</a>
+        </div>
+    </div>
 
-@if (Model.OutcomeDate.HasValue)
-{
-    <p><strong>Outcome Date:</strong> @Model.OutcomeDate.Value.ToShortDateString()</p>
-}
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-12">
+                    <div class="text-muted small">Status</div>
+                    <div class="mt-1">
+                        <span class="badge @statusClass fs-6">@Model.Status</span>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="text-muted small">Applied Date</div>
+                    <div class="fw-semibold mt-1">@Model.AppliedDate.ToString("MMM dd, yyyy")</div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="text-muted small">Interview Date</div>
+                    <div class="fw-semibold mt-1">@(Model.InterviewDate.HasValue ? Model.InterviewDate.Value.ToString("MMM dd, yyyy") : "-")</div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="text-muted small">Follow-up Date</div>
+                    <div class="fw-semibold mt-1">@(Model.FollowUpDate.HasValue ? Model.FollowUpDate.Value.ToString("MMM dd, yyyy") : "-")</div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="text-muted small">Outcome Date</div>
+                    <div class="fw-semibold mt-1">@(Model.OutcomeDate.HasValue ? Model.OutcomeDate.Value.ToString("MMM dd, yyyy") : "-")</div>
+                </div>
 
-<a asp-action="Edit" asp-route-id="@Model.JobApplicationId">Edit</a> |
-<a asp-action="Index">Back</a>
+                @if (!string.IsNullOrWhiteSpace(Model.JobType))
+                {
+                    <div class="col-12 col-md-6">
+                        <div class="text-muted small">Job Type</div>
+                        <div class="fw-semibold mt-1">@Model.JobType</div>
+                    </div>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(Model.Notes))
+                {
+                    <div class="col-12">
+                        <div class="text-muted small">Notes</div>
+                        <div class="fw-semibold mt-1" style="white-space: pre-wrap;">@Model.Notes</div>
+                    </div>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(Model.JobLink))
+                {
+                    <div class="col-12">
+                        <div class="text-muted small">Job Link</div>
+                        <div class="fw-semibold mt-1">
+                            <a href="@Model.JobLink" target="_blank" rel="noopener noreferrer">@Model.JobLink</a>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
